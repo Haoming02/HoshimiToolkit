@@ -1,0 +1,16 @@
+AssetTypeDict:
+  adv: cutscenes
+  eff: effect
+  efp: dressroom curtain
+  env: environment
+  img: image
+  m: skybox
+  mdl: model
+  mot: motion
+  mov: movie
+  others: others
+  spi: spine
+  sud: sound
+  sun: sun
+  t: special texture
+  tln: timeline
