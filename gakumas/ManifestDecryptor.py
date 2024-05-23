@@ -12,8 +12,8 @@ from pathlib import Path
 from google.protobuf.json_format import MessageToJson
 
 # Currently known magic strings 
-__KEY = "zkfuuwgc4eoxlaew"
-__IV = "LvAUtf+tnz"
+__KEY = bytes.fromhex("9d8dfd7b1371612846f7ba44e01af160")
+__IV = bytes.fromhex("1c6e6f9255c0e5412712f4010225e378")
 
 # Input cache file and output directory strings
 __inputPathString = "EncryptedCache/octocacheevai"
@@ -32,12 +32,7 @@ def __decryptCache(key = __KEY, iv = __IV) -> octodb_pb2.Database:
     Returns:
         octodb_pb2.Database: A protobuf object representing the deserialized cache.
     """
-    key = bytes(key, "utf-8")
-    iv = bytes(iv, "utf-8")
 
-    key = hashlib.md5(key).digest()
-    iv = hashlib.md5(iv).digest()
-    
     cipher = AES.new(key, AES.MODE_CBC, iv) 
     encryptCachePath = Path(__inputPathString)
 

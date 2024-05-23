@@ -6,9 +6,9 @@ from eWorkingMode import WorkingMode
 
 # Configurations
 # Diff, All
-diffMode = DiffMode.Diff
+diffMode = DiffMode.All
 # Local, Remote
-workingMode = WorkingMode.Remote
+workingMode = WorkingMode.Local
 # Adjust this param according to your PC's spec
 maxDownloadThread = 20
 

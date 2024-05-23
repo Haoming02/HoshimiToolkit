@@ -11,7 +11,6 @@ import threading
 # import wget
 
 console = Console()
-URL = "https://d2ilil7yh5oi1v.cloudfront.net/solis-{v}-{type}/{o}?generation={g}&alt=media"
 downloadPath = "Assets/"
 path = Path(downloadPath)
 path.mkdir(parents=True, exist_ok=True)
@@ -29,17 +28,15 @@ def downloadAll(jDict: dict, maxThread: int):
     countAll = assetBundleList.__len__() + resourceList.__len__()
     console.print(f"[bold green]>>> [Succeed][/bold green] Start downloading assets, this may take some hours...\n")
     executor = ThreadPoolExecutor(max_workers=maxThread)
-    allTasks = [executor.submit(downloadOne, it, "assetbundle") for it in assetBundleList]
-    allTasks.extend([executor.submit(downloadOne, it, "resources") for it in resourceList])
+    urlFormat = jDict["urlFormat"]
+    allTasks = [executor.submit(downloadOne, it, "assetbundle", urlFormat) for it in assetBundleList]
+    allTasks.extend([executor.submit(downloadOne, it, "resources", urlFormat) for it in resourceList])
     wait(allTasks, return_when=ALL_COMPLETED)
     console.print(f"\n[bold white]>>> [Info][/bold white] Download operation has been done, {errCount} error(s) occurred during download.")
 
-def downloadOne(it: Dict, _type: str):
+def downloadOne(it: Dict, _type: str, url_format: str):
     global count
     global errCount
-    v = it["uploadVersionId"]
-    o = it["objectName"]
-    g = it["generation"]
     md5 = it["md5"]
     if md5 in fileNames:
         lock.acquire()
@@ -47,7 +44,10 @@ def downloadOne(it: Dict, _type: str):
         console.print(f"\n[bold yellow]>>> ({count}/{countAll}) [Warning][/bold yellow] '{md5}' is already exists.")
         lock.release()
         return
-    url = URL.replace("{v}", str(v)).replace("{type}", _type).replace("{o}", o).replace("{g}", str(g))
+    url = url_format.replace("{v}", str(it.get("uploadVersionId")))\
+                    .replace("{type}", _type)\
+                    .replace("{o}", it.get("objectName"))\
+                    .replace("{g}", str(it.get("generation")))
     try:
         downloadAction(url, path.joinpath(md5))
         lock.acquire()

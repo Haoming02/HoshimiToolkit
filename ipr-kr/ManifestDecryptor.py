@@ -12,7 +12,7 @@ from pathlib import Path
 from google.protobuf.json_format import MessageToJson
 
 # Currently known magic strings 
-__KEY = "zkfuuwgc4eoxlaew"
+__KEY = "t3ecp48ohffxdv6x"
 __IV = "LvAUtf+tnz"
 
 # Input cache file and output directory strings
