@@ -1,0 +1,4 @@
+protobuf~=3.20.3
+pycryptodome~=3.20.0
+requests~=2.31.0
+rich~=13.7.0
