@@ -2,7 +2,6 @@ import hashlib
 import json
 from eDiffMode import DiffMode
 import octodb_pb2
-import sqlite3
 import sys
 import re
 from rich.console import Console
@@ -70,20 +69,6 @@ def __decryptCache(key=__KEY, iv=__IV) -> octodb_pb2.Database:
     console.print(
         f"[bold]>>> [Info][/bold] Current revision : {protoDatabase.revision}\n"
     )
-    # Get output dir and append it to the filename
-    outputPath = Path(f"{__outputPathString}/manifest_v{protoDatabase.revision}")
-    # Write the decrypted cache to a local file
-    try:
-        outputPath.parent.mkdir(parents=True, exist_ok=True)
-        outputPath.write_bytes(decryptedBytes)
-        console.print(
-            f"[bold green]>>> [Succeed][/bold green] Decrypted cache has been written into {outputPath}.\n"
-        )
-    except:
-        console.print(
-            f"[bold red]>>> [Error][/bold red] Failed to write decrypted file into {outputPath}.\n{sys.exc_info()}\n"
-        )
-        raise
 
     return protoDatabase
 
@@ -92,188 +77,6 @@ def __protoDb2Json(protoDb: octodb_pb2.Database) -> str:
     """Converts a protobuf serialized object to JSON string then return the string."""
     jsonDb = MessageToJson(protoDb)
     return jsonDb
-
-
-def __createSQLiteDB(jDict: dict, outputString: str, isDiff: bool = False):
-    """Converts json to SQLite database."""
-    try:
-        conn = sqlite3.connect(outputString)
-    except:
-        console.print(
-            f"[bold red]>>> [Error][/bold red] Failed to connect or create db file.\n{sys.exc_info()}\n"
-        )
-        return
-
-    cur = conn.cursor()
-    try:
-        num = cur.execute(
-            "SELECT count(*) FROM sqlite_master WHERE type='table' AND name IN ('manifest', 'assetBundleList', 'resourceList')"
-        ).fetchone()
-        if num[0] < 1:
-            cur.execute(
-                """
-            CREATE TABLE manifest (
-            revision INTEGER,
-            urlFormat TEXT,
-            tagname TEXT )
-            """
-            )
-            cur.execute(
-                """
-            CREATE TABLE assetBundleList (
-            id INTEGER PRIMARY KEY,
-            filepath TEXT,
-            name TEXT,
-            size INTEGER,
-            crc INTEGER,
-            priority INTEGER,
-            tagid TEXT,
-            dependencie TEXT,
-            state TEXT,
-            md5 TEXT,
-            objectName TEXT,
-            generation INTEGER,
-            uploadVersionId INTEGER,
-            type TEXT )
-            """
-            )
-            cur.execute(
-                """
-            CREATE TABLE resourceList (
-            id INTEGER PRIMARY KEY,
-            filepath TEXT,
-            name TEXT,
-            size INTEGER,
-            crc INTEGER,
-            priority INTEGER,
-            tagid TEXT,
-            dependencie TEXT,
-            state TEXT,
-            md5 TEXT,
-            objectName TEXT,
-            generation INTEGER,
-            uploadVersionId INTEGER,
-            type TEXT )
-            """
-            )
-            conn.commit()
-            console.print(
-                f"[bold green]>>> [Succeed][/bold green] Tables have been created successfully.\n"
-            )
-        else:
-            console.print(
-                f"[bold yellow]>>> [Warning][/bold yellow] Tables are already exists.\n"
-            )
-    except:
-        conn.rollback()
-        conn.close()
-        console.print(
-            f"[bold red]>>> [Error][/bold red] Failed to create tables.\n{sys.exc_info()}\n"
-        )
-        return
-
-    try:
-        revision = jDict.get("revision")
-        urlFormat = jDict.get("urlFormat")
-        tagname = jDict.get("tagname")
-
-        cur.execute("DELETE FROM manifest")
-        cur.execute(
-            f"""
-        INSERT INTO manifest VALUES (
-        { revision },
-        '{ urlFormat }',
-        '{ tagname }'
-        )"""
-        )
-
-        for assetBundleList in jDict["assetBundleList"]:
-            id = assetBundleList.get("id")
-            filepath = assetBundleList.get("filepath")
-            name = assetBundleList.get("name")
-            size = assetBundleList.get("size")
-            crc = assetBundleList.get("crc")
-            priority = assetBundleList.get("priority")
-            tagid = assetBundleList.get("tagid")
-            dependencie = assetBundleList.get("dependencie")
-            state = assetBundleList.get("state")
-            md5 = assetBundleList.get("md5")
-            objectName = assetBundleList.get("objectName")
-            generation = assetBundleList.get("generation")
-            uploadVersionId = assetBundleList.get("uploadVersionId")
-            _type = assetBundleList.get("type")
-
-            cur.execute(
-                f"""
-            INSERT OR REPLACE INTO assetBundleList VALUES (
-            { id if id != None else "NULL" },
-            { f"'{filepath}'" if filepath != None else "NULL"},
-            { f"'{name}'" if name != None else "NULL"},
-            { size if size != None else "NULL" },
-            { crc if crc != None else "NULL" },
-            { priority if priority != None else "NULL" },
-            { f"'{tagid}'" if tagid != None else "NULL"},
-            { f"'{dependencie}'" if dependencie != None else "NULL"},
-            { f"'{state}'" if state != None else "NULL"},
-            { f"'{md5}'" if md5 != None else "NULL"},
-            { f"'{objectName}'" if objectName != None else "NULL"},
-            { generation if generation != None else "NULL" },
-            { uploadVersionId if uploadVersionId != None else "NULL" },
-            { f"'{_type}'" if _type != None else "NULL"}
-            )"""
-            )
-
-        for resourceList in jDict["resourceList"]:
-            id = resourceList.get("id")
-            filepath = resourceList.get("filepath")
-            name = resourceList.get("name")
-            size = resourceList.get("size")
-            crc = resourceList.get("crc")
-            priority = resourceList.get("priority")
-            tagid = resourceList.get("tagid")
-            dependencie = resourceList.get("dependencie")
-            state = resourceList.get("state")
-            md5 = resourceList.get("md5")
-            objectName = resourceList.get("objectName")
-            generation = resourceList.get("generation")
-            uploadVersionId = resourceList.get("uploadVersionId")
-            _type = resourceList.get("type")
-
-            cur.execute(
-                f"""
-            INSERT OR REPLACE INTO resourceList VALUES (
-            { id if id != None else "NULL" },
-            { f"'{filepath}'" if filepath != None else "NULL"},
-            { f"'{name}'" if name != None else "NULL"},
-            { size if size != None else "NULL" },
-            { crc if crc != None else "NULL" },
-            { priority if priority != None else "NULL" },
-            { f"'{tagid}'" if tagid != None else "NULL"},
-            { f"'{dependencie}'" if dependencie != None else "NULL"},
-            { f"'{state}'" if state != None else "NULL"},
-            { f"'{md5}'" if md5 != None else "NULL"},
-            { f"'{objectName}'" if objectName != None else "NULL"},
-            { generation if generation != None else "NULL" },
-            { uploadVersionId if uploadVersionId != None else "NULL" },
-            { f"'{_type}'" if _type != None else "NULL"}
-            )"""
-            )
-
-        conn.commit()
-        console.print(
-            "[bold green]>>> [Succeed][/bold green] All data has been written into SQLite database.\n"
-        )
-    except:
-        conn.rollback()
-        conn.close()
-        console.print(
-            f"[bold red]>>> [Error][/bold red] Failed to insert data into tables.\n{sys.exc_info()}\n"
-        )
-        raise
-        return
-
-    conn.close()
-    return
 
 
 def __diffRevision(jDict: dict) -> dict:
@@ -353,12 +156,10 @@ def __diffRevision(jDict: dict) -> dict:
     diffOutputString = f"{__outputPathString}/manifest_diff_new_v{jDictPrev['revision']}_{jDict['revision']}.json"
     diffOutputPath = Path(diffOutputString)
     __writeJsonFile(diffNewDict, diffOutputPath)
-    __createSQLiteDB(diffNewDict, f"{diffOutputString[0:-5]}.db", True)
 
     diffOutputString = f"{__outputPathString}/manifest_diff_changed_v{jDictPrev['revision']}_{jDict['revision']}.json"
     diffOutputPath = Path(diffOutputString)
     __writeJsonFile(diffChangedDict, diffOutputPath)
-    __createSQLiteDB(diffChangedDict, f"{diffOutputString[0:-5]}.db", True)
     diffDict = {
         "revision": jDict["revision"],
         "assetBundleList": [],
@@ -416,10 +217,6 @@ def doDecrypt(diffMode: DiffMode) -> dict:
     # Deserialize json string to a dict
     jDict = json.loads(jsonString)
     jDict = __appendType(jDict)
-    # Define SQLite DB file output path string
-    pathString = f"ipr/DecryptedCaches/manifest_v{jDict['revision']}.db"
-    # Create SQLite DB file
-    __createSQLiteDB(jDict, pathString)
     # Diff
     diffDict = __diffRevision(jDict)
     # Define the output path of json file
