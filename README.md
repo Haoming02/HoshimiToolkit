@@ -28,11 +28,7 @@
 (venv) \foo > python Main.py
 ```
 5. **(Optional)** Run
-
-> [!WARNING]
-> Not implemented yet...
-
 ```bash
 (venv) \foo > cd ..
-(venv) > python Resize.py foo
+(venv) > python Resize.py foo\UnobfuscateAssets\revision\img
 ```
