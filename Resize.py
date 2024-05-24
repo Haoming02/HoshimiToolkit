@@ -19,7 +19,7 @@ class MODE(Enum):
 
 VERSION = {"ipr": "2020.3.18f1", "gakumas": "2022.3.21f1"}
 FILTER: dict[MODE, dict[str, str]] = {
-    MODE.ipr: (),
+    MODE.ipr: {"card": r"img_card_full_1_.{3}-\d{2}-.*-\d{2}"},
     MODE.gakumas: {
         "card": r"img_general_csprt-\d-\d{4}_full",
         "comic": r"img_general_comic_\d{4}",
@@ -27,7 +27,7 @@ FILTER: dict[MODE, dict[str, str]] = {
 }
 
 RESOLUTION: dict[MODE, dict[str, tuple[int, int]]] = {
-    MODE.ipr: (),
+    MODE.ipr: {"card": (1920, 1080, 0)},
     MODE.gakumas: {"card": (1920, 1080, 0), "comic": (1024, 760, 2)},
 }
 
@@ -39,6 +39,7 @@ count = 0
 
 def __validate_folder(folder: str) -> MODE:
     assert os.path.isdir(folder)
+    assert "img" in folder
 
     if "ipr" in folder:
         UnityPy.config.FALLBACK_UNITY_VERSION = VERSION["ipr"]
@@ -91,11 +92,6 @@ def main(folder: str):
     mode = __validate_folder(folder)
 
     os.makedirs("resized_images", exist_ok=True)
-
-    # === ToDo ===
-    if mode == MODE.ipr:
-        raise NotImplementedError
-    # === ToDo ===
 
     files = os.listdir(folder)
     filters = FILTER[mode]
