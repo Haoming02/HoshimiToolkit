@@ -27,7 +27,8 @@
 (venv) > cd foo
 (venv) \foo > python Main.py
 ```
-5. **(Optional)** Run
+5. **(Optional)** Change the settings in `Resize.py`
+6. **(Optional)** Run
 ```bash
 (venv) \foo > cd ..
 (venv) > python Resize.py foo\UnobfuscateAssets\revision\img

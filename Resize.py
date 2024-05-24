@@ -20,12 +20,15 @@ class MODE(Enum):
 VERSION = {"ipr": "2020.3.18f1", "gakumas": "2022.3.21f1"}
 FILTER: dict[MODE, dict[str, str]] = {
     MODE.ipr: (),
-    MODE.gakumas: {"card": r"img_general_csprt-\d-\d{4}_full"},
+    MODE.gakumas: {
+        "card": r"img_general_csprt-\d-\d{4}_full",
+        "comic": r"img_general_comic_\d{4}",
+    },
 }
 
 RESOLUTION: dict[MODE, dict[str, tuple[int, int]]] = {
     MODE.ipr: (),
-    MODE.gakumas: {"card": (1920, 1080)},
+    MODE.gakumas: {"card": (1920, 1080, 0), "comic": (1024, 760, 2)},
 }
 
 lock = threading.Lock()
@@ -48,8 +51,11 @@ def __validate_folder(folder: str) -> MODE:
         raise SystemExit
 
 
-def resize(file_path: str, folder: str, resolution: tuple[int, int]):
+def resize(file_path: str, folder: str, resolution: tuple[int, int, int]):
     global count
+
+    size = resolution[0:2]
+    crop = resolution[2]
 
     asset = UnityPy.load(file_path)
     for obj in asset.objects:
@@ -67,9 +73,12 @@ def resize(file_path: str, folder: str, resolution: tuple[int, int]):
                 lock.release()
 
             else:
-                img = data.image.resize(resolution, Image.Resampling.LANCZOS)
-                img.save(dest)
+                img = data.image.resize(size, Image.Resampling.LANCZOS)
 
+                if crop > 0:
+                    img = img.crop((crop, crop, size[0] - crop, size[1] - crop))
+
+                img.save(dest)
                 lock.acquire()
                 count += 1
                 console.print(
