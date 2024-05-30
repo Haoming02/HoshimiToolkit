@@ -81,7 +81,7 @@ def __diffRevision(jDict: dict) -> dict:
     if manifestList.__len__() == 0:
         console.print(f"[bold]>>> [Info][/bold] No previous revision json found.\n")
         return jDict
-    manifestList.sort(key=lambda it: it.name, reverse=True)
+    manifestList.sort(key=lambda it: int(it.name.split("_v")[1].split(".")[0]), reverse=True)
     previousOne = manifestList[0]
     jDictPrev = json.loads(previousOne.read_bytes())
 
@@ -107,22 +107,20 @@ def __diffRevision(jDict: dict) -> dict:
         )
         return jDict
 
-    assetBundlePrevDict = {
-        it["id"]: it["generation"] for it in jDictPrev["assetBundleList"]
-    }
-    resourcePrevDict = {it["id"]: it["generation"] for it in jDictPrev["resourceList"]}
+    assetBundlePrevDict = [it["id"] for it in jDictPrev["assetBundleList"]]
+    resourcePrevDict = [it["id"] for it in jDictPrev["resourceList"]]
 
     diffNewDict = {
         "revision": jDict["revision"],
         "assetBundleList": [
             it1
             for it1 in jDict["assetBundleList"]
-            if it1["id"] not in assetBundlePrevDict.keys()
+            if it1["id"] not in assetBundlePrevDict
         ],
         "resourceList": [
             it2
             for it2 in jDict["resourceList"]
-            if it2["id"] not in resourcePrevDict.keys()
+            if it2["id"] not in resourcePrevDict
         ],
     }
     diffChangedDict = {
@@ -130,14 +128,14 @@ def __diffRevision(jDict: dict) -> dict:
         "assetBundleList": [
             it1
             for it1 in jDict["assetBundleList"]
-            if it1["id"] in assetBundlePrevDict.keys()
-            and it1["generation"] != assetBundlePrevDict[it1["id"]]
+            if it1["id"] in assetBundlePrevDict
+            and it1["state"] == "UPDATE"
         ],
         "resourceList": [
             it2
             for it2 in jDict["resourceList"]
-            if it2["id"] in resourcePrevDict.keys()
-            and it2["generation"] != resourcePrevDict[it2["id"]]
+            if it2["id"] in resourcePrevDict
+            and it2["state"] == "UPDATE"
         ],
     }
 
@@ -156,17 +154,14 @@ def __diffRevision(jDict: dict) -> dict:
     __writeJsonFile(diffChangedDict, diffOutputPath)
     diffDict = {
         "revision": jDict["revision"],
+        "urlFormat": jDict["urlFormat"],
         "assetBundleList": [],
         "resourceList": [],
     }
-    for it in diffNewDict["assetBundleList"]:
-        diffDict["assetBundleList"].append(it)
-    for it in diffNewDict["resourceList"]:
-        diffDict["resourceList"].append(it)
-    for it in diffChangedDict["assetBundleList"]:
-        diffDict["assetBundleList"].append(it)
-    for it in diffChangedDict["resourceList"]:
-        diffDict["resourceList"].append(it)
+    
+    diffDict["assetBundleList"] = diffNewDict["assetBundleList"] + diffChangedDict["assetBundleList"]
+    diffDict["resourceList"] = diffNewDict["resourceList"] + diffChangedDict["resourceList"]
+
     return diffDict
 
 
