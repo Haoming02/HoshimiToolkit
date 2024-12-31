@@ -1,0 +1,6 @@
+diskcache~=5.6.0
+pillow~=11.0.0
+protobuf~=3.20.0
+pycryptodome~=3.20.0
+requests~=2.31.0
+UnityPy~=1.10.10
