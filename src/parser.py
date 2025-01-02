@@ -1,6 +1,6 @@
 import argparse
 
-from .options import DiffMode, Game, WorkMode
+from .options import WorkMode, DiffMode, Game
 
 parser = argparse.ArgumentParser(description="🟉 🟊 ⚝ ⛦ Hoshimi Toolkit ⛦ ⚝ 🟊 🟉")
 

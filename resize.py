@@ -19,6 +19,10 @@ lock = threading.Lock()
 
 RESOLUTION: dict[re.Pattern, tuple[int, int, bool | int]] = {
     r"img_card_full_1": (1920, 1080, None),
+    r"img_card_full_0": (None, None, None),
+    r"img_chr_full": (None, None, None),
+    r"img_group_kv": (None, None, None),
+    r"img_story_still_love": (3840, 2160, None),
     r"img_general_csprt.*full": (1920, 1080, None),
     r"img_general_comic": (1024, 760, 2),
     r".*": None,
@@ -59,8 +63,10 @@ def __resize(file: Path, folder: Path):
                 lock.release()
                 continue
 
-            img = data.image.resize(size, Image.Resampling.LANCZOS)
+            img = data.image
 
+            if size[0] and size[1]:
+                img = img.resize(size, Image.Resampling.LANCZOS)
             if crop is not None:
                 img = img.crop((crop, crop, size[0] - crop, size[1] - crop))
 

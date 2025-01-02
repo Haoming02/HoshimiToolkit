@@ -1,7 +1,7 @@
 @echo off
 
-set diff= --remote
-set work= --diff
+set work= --remote
+set diff= --diff
 set game= --ipr
 
 venv\Scripts\python.exe main.py %diff% %work% %game%
