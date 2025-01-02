@@ -7,8 +7,8 @@ A series of dark magics for certain Unity games ⛦ ⚝ 🟊 🟉
     - Remember to `Add Python to PATH`
     - This project was built on Python `3.10.x`
 
-<details open>
-<summary>One-Click Installation</summary>
+<details>
+<summary>Automatic Installation</summary>
 
 1. Run the `user-setup.bat` file
 
@@ -49,12 +49,12 @@ A series of dark magics for certain Unity games ⛦ ⚝ 🟊 🟉
 
 > You can also use **--help** to get the documents
 
-<ins>Diff Mode</ins>
+<ins>Work Mode</ins>
 
 - **--remote:** download assets from the game server
 - **--local:** only process files placed inside the `Assets` folder
 
-<ins>Work Mode</ins>
+<ins>Diff Mode</ins>
 
 - **--diff:** only download assets that are different
 - **--all:** always try to download everything again
