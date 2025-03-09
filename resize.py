@@ -9,7 +9,7 @@ from PIL import Image
 
 from src import ENV
 from src.logging import logger
-from src.options import CPU_THREADS, OPTIMIZE, UNITY_VERSION, Game
+from src.options import CPU_THREADS, OPTIMIZE, FORMAT, UNITY_VERSION, Game
 
 
 UnityPy.config.FALLBACK_UNITY_VERSION = UNITY_VERSION
@@ -18,6 +18,7 @@ lock = threading.Lock()
 
 
 RESOLUTION: dict[re.Pattern, tuple[int, int, bool | int]] = {
+    r"img_.*_kr": None,
     r"img_card_full_1": (1920, 1080, None),
     r"img_card_full_0": (None, None, None),
     r"img_chr_full": (None, None, None),
@@ -54,7 +55,7 @@ def __resize(file: Path, folder: Path):
     for obj in asset.objects:
         if obj.type.name in ("Texture2D", "Sprite"):
             data = obj.read()
-            dest = folder.joinpath(f"{data.name}.png")
+            dest = folder.joinpath(f"{data.name}.{FORMAT}")
 
             if dest.is_file():
                 lock.acquire()
@@ -70,7 +71,7 @@ def __resize(file: Path, folder: Path):
             if crop is not None:
                 img = img.crop((crop, crop, size[0] - crop, size[1] - crop))
 
-            img.save(dest, optimize=OPTIMIZE)
+            img.save(dest, optimize=OPTIMIZE, quality=100, lossless=not OPTIMIZE)
             lock.acquire()
             countCurrent += 1
             logger.info(f'$S({countCurrent}/{countTotal}) "{data.name}" resized')

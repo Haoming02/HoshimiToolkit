@@ -8,6 +8,8 @@ MAX_RETRY = 5
 """number of attempts to download an asset"""
 OPTIMIZE = False
 """compress the images (slower)"""
+FORMAT = "png"  # "jpg" | "png" | "webp"
+"""save format"""
 
 FILTER = r".*"
 """the regular expression for assets to download"""

@@ -61,8 +61,8 @@ A series of dark magics for certain Unity games ⛦ ⚝ 🟊 🟉
 
 <ins>Game</ins>
 
-- **--ipr:** Idoly Pride
-- **--kr:** Idoly Pride *(Korean Server)*
+- **--ipr:** Idoly Pride *(JP Server)*
+- **--kr:** Idoly Pride *(Korean/Global Server)*
 - **--gakumas:** Gakuen Idolmaster
 
 ### Options
@@ -71,7 +71,10 @@ A series of dark magics for certain Unity games ⛦ ⚝ 🟊 🟉
 - **MAX_RETRY:** how many retries before a download is considered failed
 - **OPTIMIZE:** takes longer to save a more compressed image
 - **FILTER:** a [regular expression](https://regexr.com/) to filter the assets to download
-    - The default value downloads everything
+    - <b><ins>Examples</ins></b>
+        - `r".*"` simply downloads everything *(default)*
+        - `r".*premk.*"` only downloads KR-exclusive contents *(for Idoly Pride)*
+        - `r".*img.*"` only downloads images
 
 <hr>
 
