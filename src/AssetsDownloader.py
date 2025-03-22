@@ -37,11 +37,12 @@ def __download(url: str, filePath: Path):
     raise TimeoutError
 
 
-# IPR:      https://d2ilil7yh5oi1v.cloudfront.net/solis-{v}-{type}/{o}?generation={g}&alt=media
-# Gakumas:  https://object.asset.game-gakuen-idolmaster.jp/{o}
-
-
 def __downloadSingle(path: Path, item: dict, _type: str, url_format: str, game: Game):
+    """
+    ## url_format:
+        - IPR:      https://d2ilil7yh5oi1v.cloudfront.net/solis-{v}-{type}/{o}?generation={g}&alt=media
+        - Gakumas:  https://object.asset.game-gakuen-idolmaster.jp/{o}
+    """
     global countCurrent
     global countError
 

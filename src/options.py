@@ -11,8 +11,11 @@ OPTIMIZE = False
 FORMAT = "png"  # "jpg" | "png" | "webp"
 """save format"""
 
-FILTER = r".*"
-"""the regular expression for assets to download"""
+FILTER = r"(.*(img|sud).*)"
+"""
+the regular expression for assets to download
+see: https://regexr.com/
+"""
 
 
 class WorkMode(Enum):
