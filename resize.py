@@ -17,16 +17,18 @@ UnityPy.config.FALLBACK_VERSION_WARNED = True
 lock = threading.Lock()
 
 
-RESOLUTION: dict[re.Pattern, tuple[int, int, bool | int]] = {
-    r"img_.*_kr": None,
-    r"img_card_full_1": (1920, 1080, None),
-    r"img_card_full_0": (None, None, None),
-    r"img_chr_full": (None, None, None),
-    r"img_group_kv": (None, None, None),
-    r"img_story_still_love": (3840, 2160, None),
-    r"img_general_csprt.*full": (1920, 1080, None),
-    r"img_general_comic": (1024, 760, 2),
-    r".*": None,
+RESOLUTION: dict[re.Pattern, tuple[int, int, int | None] | None] = {
+    re.compile(r"img_.+_kr"): None,
+    re.compile(r"img_card_full_1"): (1920, 1080, None),
+    re.compile(r"img_card_full_0"): (None, None, None),
+    re.compile(r"music_jacket"): (None, None, None),
+    re.compile(r"img_chr_full"): (None, None, None),
+    re.compile(r"img_group_kv"): (None, None, None),
+    re.compile(r"img_story_still_love"): (3840, 2160, None),
+    re.compile(r"img_general_csprt.+full"): (1920, 1080, None),
+    re.compile(r"img_general_comic_"): (1024, 760, 2),
+    re.compile(r"img_general_comic4(?!.+thumb)"): (512, 1536, None),
+    re.compile(r".*"): None,  # (None, None, None)
 }
 
 countCurrent = 0

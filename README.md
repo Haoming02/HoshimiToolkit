@@ -73,8 +73,16 @@ A series of dark magics for certain Unity games ⛦ ⚝ 🟊 🟉
 - **FILTER:** a [regular expression](https://regexr.com/) to filter the assets to download
     - <b><ins>Examples</ins></b>
         - `r".*"` simply downloads everything *(default)*
-        - `r".*premk.*"` only downloads KR-exclusive contents *(for Idoly Pride)*
-        - `r".*img.*"` only downloads images
+        - `r".+premk.+"` only downloads KR-exclusive contents *(for Idoly Pride)*
+        - `r".+img.+"` only downloads images
+
+For **Resize**, if you simply want to extract every single image, change the `resize.py` script as follow:
+
+```py
+RESOLUTION: dict[re.Pattern, tuple[int, int, int | None] | None] = {
+    re.compile(r".*"): (None, None, None)
+}
+```
 
 <hr>
 

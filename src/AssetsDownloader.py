@@ -12,6 +12,7 @@ from .logging import logger
 from .options import CPU_THREADS, FILTER, MAX_RETRY, Game
 
 lock = threading.Lock()
+_FILTER = re.compile(FILTER)
 
 countCurrent = 0
 countError = 0
@@ -36,7 +37,11 @@ def __download(url: str, filePath: Path):
     raise TimeoutError
 
 
-def __downloadSingle(path: Path, item: dict, _type: str, url_format: str):
+# IPR:      https://d2ilil7yh5oi1v.cloudfront.net/solis-{v}-{type}/{o}?generation={g}&alt=media
+# Gakumas:  https://object.asset.game-gakuen-idolmaster.jp/{o}
+
+
+def __downloadSingle(path: Path, item: dict, _type: str, url_format: str, game: Game):
     global countCurrent
     global countError
 
@@ -48,19 +53,26 @@ def __downloadSingle(path: Path, item: dict, _type: str, url_format: str):
         lock.release()
         return
 
-    if not re.search(FILTER, item["name"]):
+    if not re.search(_FILTER, item["name"]):
         lock.acquire()
         countCurrent = countCurrent + 1
         logger.info(f'$S({countCurrent}/{countTotal}) File "{md5}" skipped')
         lock.release()
         return
 
-    url = url_format.format(
-        v=str(item["uploadVersionId"]),
-        o=str(item["objectName"]),
-        g=str(item["generation"]),
-        type=str(_type),
-    )
+    if game is Game.gakumas:
+        url = url_format.format(
+            o=str(item["objectName"]),
+            type=str(item["type"]),
+        )
+
+    else:
+        url = url_format.format(
+            v=str(item["uploadVersionId"]),
+            o=str(item["objectName"]),
+            g=str(item["generation"]),
+            type=str(_type),
+        )
 
     try:
         __download(url, path.joinpath(md5))
@@ -90,19 +102,19 @@ def DownloadAll(jsonDB: dict, game: Game):
 
     global countTotal
     countTotal = len(assetBundleList) + len(resourceList)
-    logger.info("Started downloading assets...")
+    logger.info(f"Started processing {countTotal} assets...")
 
     executor = ThreadPoolExecutor(max_workers=CPU_THREADS)
     urlFormat: str = jsonDB["urlFormat"]
 
     allTasks = [
-        executor.submit(__downloadSingle, path, item, "assetbundle", urlFormat)
+        executor.submit(__downloadSingle, path, item, "assetbundle", urlFormat, game)
         for item in assetBundleList
     ]
 
     allTasks.extend(
         [
-            executor.submit(__downloadSingle, path, item, "resources", urlFormat)
+            executor.submit(__downloadSingle, path, item, "resources", urlFormat, game)
             for item in resourceList
         ]
     )
