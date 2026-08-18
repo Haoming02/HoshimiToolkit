@@ -40,11 +40,10 @@ def __unobfuscate(
         exportFolder.mkdir(parents=True, exist_ok=True)
         exportFolder.joinpath(f"{name}.unity3d").write_bytes(buff)
 
-        lock.acquire()
-        countCurrent = countCurrent + 1
+        with lock:
+            countCurrent = countCurrent + 1
         ratio = f"({countCurrent}/{countTotal})"
         logger.info(f'{ratio} Assetbundle "{name}.unity3d" is not obfuscated')
-        lock.release()
         return
 
     unityFS = __cryptByString(
@@ -62,27 +61,24 @@ def __unobfuscate(
         flag = exportFolder.joinpath(name + ".unity3d").write_bytes(unityFS)
 
         if flag:
-            lock.acquire()
-            countCurrent += 1
+            with lock:
+                countCurrent += 1
             ratio = f"({countCurrent}/{countTotal})"
             logger.info(f'$S{ratio} Assetbundle "{name}.unity3d" is unobfuscated')
-            lock.release()
 
         else:
-            lock.acquire()
-            countError += 1
-            countCurrent += 1
+            with lock:
+                countError += 1
+                countCurrent += 1
             ratio = f"({countCurrent}/{countTotal})"
             logger.error(f'$S{ratio} Failed to write "{name}.unity3d"')
-            lock.release()
 
     else:
-        lock.acquire()
-        countError += 1
-        countCurrent += 1
+        with lock:
+            countError += 1
+            countCurrent += 1
         ratio = f"({countCurrent}/{countTotal})"
         logger.error(f'$S{ratio} Failed to unobfuscate "{name}.unity3d"')
-        lock.release()
 
 
 def Unobfuscate(jsonDB: dict, game: Game) -> bool:
@@ -140,11 +136,10 @@ def RenameAll(jsonDB: dict, game: Game) -> bool:
     contents = Path(__inputDirectory).glob("**/*")
     filePaths = [path for path in contents if path.name in dict_md5_name]
 
-    countCurrent = 0
     countTotal = len(filePaths)
     rev = str(jsonDB["revision"])
 
-    for path in filePaths:
+    for current, path in enumerate(filePaths):
         md5 = path.name
         name = dict_md5_name[md5]
         _type = dict_md5_type[md5]
@@ -153,8 +148,7 @@ def RenameAll(jsonDB: dict, game: Game) -> bool:
         exportFolder.mkdir(parents=True, exist_ok=True)
         exportFolder.joinpath(name).write_bytes(path.read_bytes())
 
-        countCurrent += 1
-        logger.info(f'$S({countCurrent}/{countTotal}) Resource "{name}" renamed')
+        logger.info(f'$S({current + 1}/{countTotal}) Resource "{name}" renamed')
 
     logger.info("Rename finished")
     return True
@@ -162,38 +156,38 @@ def RenameAll(jsonDB: dict, game: Game) -> bool:
 
 def __stringToMaskBytes(maskStr: str, maskStrLen: int, bytesLen: int) -> bytes:
     maskBytes = bytearray(bytesLen)
-    if maskStr != 0:
-        if maskStrLen >= 1:
-            i = 0
-            j = 0
-            k = bytesLen - 1
-            while maskStrLen != j:
-                charJ = maskStr[j]
-                charJ = int.from_bytes(
-                    charJ.encode("ascii"), byteorder="little", signed=False
-                )
-                j += 1
-                maskBytes[i] = charJ
-                i += 2
-                charJ = ~charJ & 0xFF
-                maskBytes[k] = charJ
-                k -= 2
 
-        if bytesLen >= 1:
-            l = bytesLen
-            v13 = 0x9B
-            m = bytesLen
-            pointer = 0
-            while m:
-                v16 = maskBytes[pointer]
-                pointer += 1
-                m -= 1
-                v13 = (((v13 & 1) << 7) | (v13 >> 1)) ^ v16
-            b = 0
-            while l:
-                l -= 1
-                maskBytes[b] ^= v13
-                b += 1
+    if maskStrLen >= 1:
+        i = 0
+        j = 0
+        k = bytesLen - 1
+        while maskStrLen != j:
+            charJ = maskStr[j]
+            charJ = int.from_bytes(
+                charJ.encode("ascii"), byteorder="little", signed=False
+            )
+            j += 1
+            maskBytes[i] = charJ
+            i += 2
+            charJ = ~charJ & 0xFF
+            maskBytes[k] = charJ
+            k -= 2
+
+    if bytesLen >= 1:
+        l = bytesLen
+        v13 = 0x9B
+        m = bytesLen
+        pointer = 0
+        while m:
+            v16 = maskBytes[pointer]
+            pointer += 1
+            m -= 1
+            v13 = (((v13 & 1) << 7) | (v13 >> 1)) ^ v16
+        b = 0
+        while l:
+            l -= 1
+            maskBytes[b] ^= v13
+            b += 1
 
     return bytes(maskBytes)
 
@@ -213,9 +207,7 @@ def __cryptByString(
 
     i = 0
     while streamPos + i < headerLength:
-        buffer[offset + i] ^= maskBytes[
-            streamPos + i - int((streamPos + i) / bytesLength) * bytesLength
-        ]
+        buffer[offset + i] ^= maskBytes[(streamPos + i) % bytesLength]
         i += 1
 
     return bytes(buffer)

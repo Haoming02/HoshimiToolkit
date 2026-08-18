@@ -1,24 +1,29 @@
 import os
 import re
 import threading
+import warnings
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import UnityPy
+
+if TYPE_CHECKING:
+    from UnityPy.classes import Texture2D
+
 from PIL import Image
 
 from src import ENV
 from src.logging import logger
-from src.options import CPU_THREADS, OPTIMIZE, FORMAT, UNITY_VERSION, Game
+from src.options import CPU_THREADS, FORMAT, LOSSLESS, OPTIMIZE, UNITY_VERSION, Game
 
-
+warnings.simplefilter("ignore", UnityPy.exceptions.UnityVersionFallbackWarning)
 UnityPy.config.FALLBACK_UNITY_VERSION = UNITY_VERSION
-UnityPy.config.FALLBACK_VERSION_WARNED = True
+
 lock = threading.Lock()
 
 
 RESOLUTION: dict[re.Pattern, tuple[int, int, int | None] | None] = {
-    re.compile(r"img_.+_kr"): None,
     re.compile(r"img_card_full_1"): (1920, 1080, None),
     re.compile(r"img_card_full_0"): (None, None, None),
     re.compile(r"music_jacket"): (None, None, None),
@@ -44,9 +49,8 @@ def __resize(file: Path, folder: Path):
             break
 
     if resolution is None:
-        lock.acquire()
-        countCurrent += 1
-        lock.release()
+        with lock:
+            countCurrent += 1
         return
 
     size = resolution[0:2]
@@ -56,14 +60,13 @@ def __resize(file: Path, folder: Path):
 
     for obj in asset.objects:
         if obj.type.name in ("Texture2D", "Sprite"):
-            data = obj.read()
-            dest = folder.joinpath(f"{data.name}.{FORMAT}")
+            data: "Texture2D" = obj.read()
+            dest = folder.joinpath(f"{data.m_Name}.{FORMAT}")
 
             if dest.is_file():
-                lock.acquire()
-                countCurrent += 1
-                logger.info(f'({countCurrent}/{countTotal}) "{data.name}" skipped')
-                lock.release()
+                with lock:
+                    countCurrent += 1
+                logger.info(f'({countCurrent}/{countTotal}) "{data.m_Name}" skipped')
                 continue
 
             img = data.image
@@ -73,11 +76,10 @@ def __resize(file: Path, folder: Path):
             if crop is not None:
                 img = img.crop((crop, crop, size[0] - crop, size[1] - crop))
 
-            img.save(dest, optimize=OPTIMIZE, quality=100, lossless=not OPTIMIZE)
-            lock.acquire()
-            countCurrent += 1
-            logger.info(f'$S({countCurrent}/{countTotal}) "{data.name}" resized')
-            lock.release()
+            img.save(dest, optimize=OPTIMIZE, quality=100, lossless=LOSSLESS)
+            with lock:
+                countCurrent += 1
+            logger.info(f'$S({countCurrent}/{countTotal}) "{data.m_Name}" resized')
 
 
 def main(game: Game):
@@ -104,14 +106,11 @@ if __name__ == "__main__":
 
     game = parser.add_mutually_exclusive_group(required=True)
     game.add_argument("--ipr", action="store_true", help="Idoly Pride")
-    game.add_argument("--kr", action="store_true", help="Idoly Pride (KR Server)")
     game.add_argument("--gakumas", action="store_true", help="Gakuen Idolmaster")
 
     args = parser.parse_args()
 
-    if args.kr:
-        main(Game.kr)
-    elif args.gakumas:
+    if args.gakumas:
         main(Game.gakumas)
     else:
         main(Game.ipr)

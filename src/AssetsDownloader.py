@@ -18,7 +18,7 @@ countCurrent = 0
 countError = 0
 countTotal = 0
 
-existingFilenames = []
+existingFilenames: set[str] = {}
 
 
 def __download(url: str, filePath: Path):
@@ -48,17 +48,15 @@ def __downloadSingle(path: Path, item: dict, _type: str, url_format: str, game: 
 
     md5 = item["md5"]
     if md5 in existingFilenames:
-        lock.acquire()
-        countCurrent = countCurrent + 1
+        with lock:
+            countCurrent = countCurrent + 1
         logger.warning(f'({countCurrent}/{countTotal}) File "{md5}" already exists')
-        lock.release()
         return
 
     if not re.search(_FILTER, item["name"]):
-        lock.acquire()
-        countCurrent = countCurrent + 1
+        with lock:
+            countCurrent = countCurrent + 1
         logger.info(f'$S({countCurrent}/{countTotal}) File "{md5}" skipped')
-        lock.release()
         return
 
     if game is Game.gakumas:
@@ -77,16 +75,14 @@ def __downloadSingle(path: Path, item: dict, _type: str, url_format: str, game: 
 
     try:
         __download(url, path.joinpath(md5))
-        lock.acquire()
-        countCurrent += 1
+        with lock:
+            countCurrent += 1
         logger.info(f'$S({countCurrent}/{countTotal}) File "{md5}" downloaded')
-        lock.release()
     except Exception:
-        lock.acquire()
-        countCurrent += 1
-        countError += 1
+        with lock:
+            countCurrent += 1
+            countError += 1
         logger.error(f'({countCurrent}/{countTotal}) File "{md5}" failed to download')
-        lock.release()
 
 
 def DownloadAll(jsonDB: dict, game: Game):
@@ -96,7 +92,7 @@ def DownloadAll(jsonDB: dict, game: Game):
     contents = path.glob("**/*")
 
     global existingFilenames
-    existingFilenames = [file.name for file in contents]
+    existingFilenames = {file.name for file in contents if file.is_file()}
 
     assetBundleList: list = jsonDB["assetBundleList"]
     resourceList: list = jsonDB["resourceList"]

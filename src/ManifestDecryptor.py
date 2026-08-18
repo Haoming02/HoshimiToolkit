@@ -73,14 +73,12 @@ def __loadJson(jsonString: str) -> dict:
 
 
 def __diffRevision(jsonDB: dict, cache: Cache) -> dict:
-    versions: list[int] = list(cache.iterkeys(reverse=True))
+    latest: int = next(cache.iterkeys(reverse=True), None)
     rev = int(jsonDB["revision"])
 
-    if len(versions) == 0:
+    if latest is None:
         cache[rev] = jsonDB
         return jsonDB
-
-    latest = versions[0]
 
     if latest >= rev:
         logger.warning("The given Cache is duplicated / outdated...")
@@ -94,8 +92,8 @@ def __diffRevision(jsonDB: dict, cache: Cache) -> dict:
     prevDB: dict = cache[latest]
     cache[rev] = jsonDB
 
-    prevAssetBundle: list[int] = [it["id"] for it in prevDB["assetBundleList"]]
-    prevResource: list[int] = [it["id"] for it in prevDB["resourceList"]]
+    prevAssetBundle: set[int] = {it["id"] for it in prevDB["assetBundleList"]}
+    prevResource: set[int] = {it["id"] for it in prevDB["resourceList"]}
 
     addedDB = {
         "assetBundleList": [
@@ -158,4 +156,5 @@ def Decrypt(diffMode: DiffMode, game: Game) -> tuple[dict, bool]:
     if diffDB is None:
         return None, False
 
+    cache.close()
     return (jsonDB if diffMode == DiffMode.all else diffDB), True

@@ -1,8 +1,8 @@
 @echo off
 
-set work= --remote
 set diff= --diff
 set game= --ipr
+set work= --remote
 
-venv\Scripts\python.exe main.py %diff% %work% %game%
+venv\Scripts\python.exe main.py %diff% %game% %work%
 pause

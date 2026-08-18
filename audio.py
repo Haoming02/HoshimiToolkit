@@ -1,6 +1,7 @@
 import os
 import re
 import threading
+import warnings
 from concurrent.futures import ALL_COMPLETED, ThreadPoolExecutor, wait
 from pathlib import Path
 
@@ -10,9 +11,9 @@ from src import ENV
 from src.logging import logger
 from src.options import CPU_THREADS, UNITY_VERSION, Game
 
-
+warnings.simplefilter("ignore", UnityPy.exceptions.UnityVersionFallbackWarning)
 UnityPy.config.FALLBACK_UNITY_VERSION = UNITY_VERSION
-UnityPy.config.FALLBACK_VERSION_WARNED = True
+
 lock = threading.Lock()
 
 
@@ -34,9 +35,8 @@ def __extract(file: Path, folder: Path):
             break
 
     if not resolution:
-        lock.acquire()
-        countCurrent += 1
-        lock.release()
+        with lock:
+            countCurrent += 1
         return
 
     asset = UnityPy.load(str(file))
@@ -54,10 +54,9 @@ def __extract(file: Path, folder: Path):
                     with open(str(dest), "wb") as f:
                         f.write(data)
 
-                    lock.acquire()
-                    countCurrent += 1
+                    with lock:
+                        countCurrent += 1
                     logger.info(f'$S({countCurrent}/{countTotal}) "{name}" extracted')
-                    lock.release()
 
 
 def main(game: Game):
@@ -84,14 +83,11 @@ if __name__ == "__main__":
 
     game = parser.add_mutually_exclusive_group(required=True)
     game.add_argument("--ipr", action="store_true", help="Idoly Pride")
-    game.add_argument("--kr", action="store_true", help="Idoly Pride (KR Server)")
     game.add_argument("--gakumas", action="store_true", help="Gakuen Idolmaster")
 
     args = parser.parse_args()
 
-    if args.kr:
-        main(Game.kr)
-    elif args.gakumas:
-        logger.error("Gakumas songs are already .mp3 files~")
+    if args.gakumas:
+        logger.error("Audio Files for Gakumas are already .mp3 files~")
     else:
         main(Game.ipr)

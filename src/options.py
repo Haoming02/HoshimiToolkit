@@ -7,20 +7,17 @@ CPU_THREADS = 16
 MAX_RETRY = 5
 """number of attempts to download an asset"""
 OPTIMIZE = False
-"""compress the images (slower)"""
+"""use better algorithm to save the images (slower)"""
+LOSSLESS = False
+"""save the images losslessly (larger)"""
 FORMAT = "png"  # "jpg" | "png" | "webp"
-"""save format"""
+"""image format"""
 
 FILTER = r"(.*(img|sud).*)"
 """
 the regular expression for assets to download
 see: https://regexr.com/
 """
-
-
-class WorkMode(Enum):
-    remote = 0
-    local = 1
 
 
 class DiffMode(Enum):
@@ -31,7 +28,11 @@ class DiffMode(Enum):
 class Game(Enum):
     ipr = 0
     gakumas = 1
-    kr = 2
+
+
+class WorkMode(Enum):
+    remote = 0
+    local = 1
 
 
 class MagicStrings:
@@ -46,10 +47,5 @@ class MagicStrings:
             case Game.gakumas:
                 return (
                     bytes.fromhex("9d8dfd7b1371612846f7ba44e01af160"),
-                    bytes.fromhex("1c6e6f9255c0e5412712f4010225e378"),
-                )
-            case Game.kr:
-                return (
-                    bytes.fromhex("62ec03eb7971f85cffda333e123155a7"),
                     bytes.fromhex("1c6e6f9255c0e5412712f4010225e378"),
                 )
